@@ -101,7 +101,7 @@ struct CWeapon
 			float Knockback)
 	{
 	    str_copy(m_Name, Name, sizeof(m_Name));
-	    str_copy(m_BuyCmd, BuyCmd, sizeof(BuyCmd));
+	    str_copy(m_BuyCmd, BuyCmd, sizeof(m_BuyCmd));
 		m_ParentWeapon = ParentWeapon;
 		m_ProjectileType = ProjectileType;
 		m_Sound = Sound;
