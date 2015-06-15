@@ -33,7 +33,7 @@ enum Tips
 	NUM_TIPS
 };
 
-const int TipTimer[NUM_TIPS] = 
+const int TipTimer[NUM_TIPS] =
 {
 	2000, // TIP_BUY
 	5000, // TIP_CLIPS
@@ -61,8 +61,8 @@ static const char *TipText[NUM_TIPS] =
 
 struct CWeapon
 {
-	char *m_Name;
-	char *m_BuyCmd;
+	char m_Name[32];
+	char m_BuyCmd[32];
 	int m_ParentWeapon;
 	int m_ProjectileType;
 	int m_Sound;
@@ -79,10 +79,10 @@ struct CWeapon
 	float m_Knockback;
 	int m_Extra1;
 	int m_Require;
-	
-	
-	CWeapon(char *Name,
-			char *BuyCmd,
+
+
+	CWeapon(const char *Name,
+			const char *BuyCmd,
 			int ParentWeapon,
 			int ProjectileType,
 			int Sound,
@@ -100,8 +100,8 @@ struct CWeapon
 			int ClipReloadTime,
 			float Knockback)
 	{
-		m_Name = Name;
-		m_BuyCmd = BuyCmd;
+	    str_copy(m_Name, Name, sizeof(m_Name));
+	    str_copy(m_BuyCmd, BuyCmd, sizeof(m_BuyCmd));
 		m_ParentWeapon = ParentWeapon;
 		m_ProjectileType = ProjectileType;
 		m_Sound = Sound;
@@ -152,7 +152,7 @@ enum CustomWeapons
 	NUM_CUSTOMWEAPONS
 };
 
-const int BotAttackRange[NUM_CUSTOMWEAPONS] = 
+const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 {
 	120, // SWORD_KATANA,
 	120, // SWORD_PIKATANA,
@@ -208,7 +208,7 @@ enum WeaponExtraFeature
 };
 
 
-const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] = 
+const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 {
 	CWeapon(
 		"Katana",
