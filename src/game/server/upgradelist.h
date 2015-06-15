@@ -1,6 +1,7 @@
 #ifndef GAME_SERVER_UPGRADELIST_H
 #define GAME_SERVER_UPGRADELIST_H
 
+#include <cstring>
 #include <game/generated/protocol.h>
 
 #define MEDIC_ABILITY_COOLDOWN 600
