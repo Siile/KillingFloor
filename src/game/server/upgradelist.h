@@ -59,7 +59,7 @@ static const char *TipText[NUM_TIPS] =
 
 
 
-const struct CWeapon
+struct CWeapon
 {
 	char *m_Name;
 	char *m_BuyCmd;
