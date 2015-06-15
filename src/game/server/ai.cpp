@@ -125,7 +125,8 @@ void CAI::Unstuck()
 bool CAI::SeekFlag()
 {
 	CFlag *apFlag[1];
-	int Num = GameServer()->m_World.FindEntities(m_LastPos, 999999, (CEntity**)apFlag, 1, CGameWorld::ENTTYPE_FLAG);
+	//int Num = 
+	GameServer()->m_World.FindEntities(m_LastPos, 999999, (CEntity**)apFlag, 1, CGameWorld::ENTTYPE_FLAG);
 	
 	if (apFlag[0])
 	{

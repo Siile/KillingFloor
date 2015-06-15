@@ -186,7 +186,7 @@ void CCharacter::ActivateBloodlust()
 	
 bool CCharacter::SetLandmine()
 {
-	int i = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y-32);
+	//int i = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y-32);
 	
 	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x-16, m_Pos.y+24)&CCollision::COLFLAG_SOLID && GameServer()->Collision()->GetCollisionAt(m_Pos.x+16, m_Pos.y+24)&CCollision::COLFLAG_SOLID)
 	{
