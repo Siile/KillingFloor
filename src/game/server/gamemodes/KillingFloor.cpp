@@ -31,6 +31,16 @@
 #include <game/server/ai/bossminion.h>
 
 
+
+static const char *aDifficulty[NUM_DIFFICULTIES] = 
+{
+	"Normal",
+	"Hard",
+	"Suicidal"
+};
+
+
+
 CGameControllerKillingFloor::CGameControllerKillingFloor(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
 	m_pGameType = "KF";

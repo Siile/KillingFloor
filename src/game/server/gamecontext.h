@@ -24,12 +24,7 @@ enum Difficulty
 	NUM_DIFFICULTIES
 };
 
-static const char *aDifficulty[NUM_DIFFICULTIES] = 
-{
-	"Normal",
-	"Hard",
-	"Suicidal"
-};
+
 
 
 /*

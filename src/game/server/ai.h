@@ -13,7 +13,6 @@ class CAI
 	class CPlayer *m_pPlayer;
 	
 protected:
-	CAI(class CGameContext *pGameServer, class CPlayer *pPlayer);
 	
 	CGameContext *GameServer() const { return m_pGameServer; }
 	CPlayer *Player() const { return m_pPlayer; }
@@ -60,6 +59,10 @@ protected:
 	
 	
 public:
+	CAI(class CGameContext *pGameServer, class CPlayer *pPlayer);
+	
+	~CAI(){ }
+
 	void Reset();
 	void Tick();
 	void UpdateInput(int *Data); // MAX_INPUT_SIZE

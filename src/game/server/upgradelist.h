@@ -10,7 +10,7 @@
 #define PIONEER_ABILITY_COOLDOWN 400
 #define BERSERKER_ABILITY_COOLDOWN 800
 
-#define MAX_GRENADES 5
+#define MAX_GRENADES 5 
 
 enum PlayerClasses
 {
@@ -44,17 +44,7 @@ const int TipTimer[NUM_TIPS] =
 	4500, // TIP_BERSERKER
 };
 
-static const char *TipText[NUM_TIPS] =
-{
-	"Check vote menu to buy & upgrade weapons", // TIP_BUY
-	"Armor shows your remaining clips, collect armor to get more ammo", // TIP_ARMOR
-	//"You can throw grenades using heart emoticon", // TIP_COMMANDO
-	"You can create clips by using any emoticon", // TIP_COMMANDO
-	"You can heal by using any emoticon", // TIP_MEDIC
-	"You can put electro mines by using any emoticon", // TIP_ENGINEER
-	"You can put land mines by using any emoticon", // TIP_PIONEER
-	"You can activate bloodlust by using any emoticon" // TIP_PIONEER
-};
+// moved TipTex to player.cpp
 
 
 
