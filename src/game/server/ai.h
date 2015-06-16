@@ -61,7 +61,7 @@ protected:
 public:
 	CAI(class CGameContext *pGameServer, class CPlayer *pPlayer);
 	
-	~CAI(){ }
+	virtual ~CAI(){ }
 
 	void Reset();
 	void Tick();
