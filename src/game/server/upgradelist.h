@@ -51,8 +51,8 @@ const int TipTimer[NUM_TIPS] =
 
 struct CWeapon
 {
-	char m_Name[32];
-	char m_BuyCmd[32];
+	char m_Name[64];
+	char m_BuyCmd[64];
 	int m_ParentWeapon;
 	int m_ProjectileType;
 	int m_Sound;
@@ -195,6 +195,7 @@ enum WeaponExtraFeature
 	BIGBULLETSPREAD,
 	SLEEPEFFECT,
 	ELECTRIC,
+	NUM_EXTRA_FEATURES
 };
 
 
