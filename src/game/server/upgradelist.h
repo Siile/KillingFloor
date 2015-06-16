@@ -12,7 +12,7 @@
 
 #define MAX_GRENADES 5
 
-// testing push
+// testing
 
 enum PlayerClasses
 {
