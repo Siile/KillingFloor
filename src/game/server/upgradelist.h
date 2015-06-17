@@ -11,7 +11,7 @@
 #define BERSERKER_ABILITY_COOLDOWN 800
 
 #define MAX_GRENADES 5
-
+ 
 // testing
 
 enum PlayerClasses
