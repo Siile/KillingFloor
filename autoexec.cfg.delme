@@ -1,7 +1,0 @@
-sv_port 8303
-sv_rcon_password changeme123
-sv_name "Killing Floor 1.0 - Zombie server"
-sv_motd "visit www.ninslash.com for more"
-sv_gametype KillingFloor
-sv_map kf_warehouse1
-sv_maprotation kf_warehouse1 kf_warehouse2
