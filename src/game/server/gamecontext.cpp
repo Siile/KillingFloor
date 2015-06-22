@@ -1918,7 +1918,7 @@ void CGameContext::SetupVotes(int ClientID)
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
 	
-	//InitVotes(-2);
+	InitVotes(-2);
 }
 
 
@@ -1995,10 +1995,12 @@ void CGameContext::UpdateVotes(int ClientID)
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, ClientID);
 
+	
 	m_pVoteOptionHeap->Reset();
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
+	
 
 	if (ClientID == -1)
 	{
