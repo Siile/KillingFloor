@@ -24,7 +24,12 @@ enum Difficulty
 	NUM_DIFFICULTIES
 };
 
-
+static const char *aDifficulty[NUM_DIFFICULTIES] = 
+{
+	"Normal",
+	"Hard",
+	"Suicidal"
+};
 
 
 /*
@@ -203,10 +208,9 @@ public:
 	
 	// custom vote stuff
 	void SetupVotes(int ClientID = -1);
-	void InitVotes(int ClientID);
+	void ResetVotes();
+	void AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex = -1);
 	void AddVote(const char * Desc, const char * Cmd, int ClientID = -1);
-	
-	void UpdateVotes(int ClientID = -1);
 };
 
 inline int CmaskAll() { return -1; }

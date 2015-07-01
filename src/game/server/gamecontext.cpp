@@ -496,21 +496,21 @@ void CGameContext::OnTick()
 				{
 					m_Difficulty = NORMAL;
 					SendBroadcast("Difficulty: Normal", -1);
-					UpdateVotes(-1);
+					ResetVotes();
 				}
 				else
 				if ( strcmp(m_aVoteCommand, "setdiffhard") == 0 )
 				{
 					m_Difficulty = HARD;
 					SendBroadcast("Difficulty: Hard", -1);
-					UpdateVotes(-1);
+					ResetVotes();
 				}
 				else
 				if ( strcmp(m_aVoteCommand, "setdiffsuicidal") == 0 )
 				{
 					m_Difficulty = SUICIDAL;
 					SendBroadcast("Difficulty: Suicidal", -1);
-					UpdateVotes(-1);
+					ResetVotes();
 				}
 				
 				
@@ -981,31 +981,31 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(str_comp(aCmd, "setmedic") == 0)
 			{
 				m_apPlayers[ClientID]->TrySetClass(CLASS_MEDIC);
-				UpdateVotes(ClientID);
+				ResetVotes();
 				return;
 			}
 			if(str_comp(aCmd, "setcommando") == 0)
 			{
 				m_apPlayers[ClientID]->TrySetClass(CLASS_COMMANDO);
-				UpdateVotes(ClientID);
+				ResetVotes();
 				return;
 			}
 			if(str_comp(aCmd, "setberserker") == 0)
 			{
 				m_apPlayers[ClientID]->TrySetClass(CLASS_BERSERKER);
-				UpdateVotes(ClientID);
+				ResetVotes();
 				return;
 			}
 			if(str_comp(aCmd, "setpioneer") == 0)
 			{
 				m_apPlayers[ClientID]->TrySetClass(CLASS_PIONEER);
-				UpdateVotes(ClientID);
+				ResetVotes();
 				return;
 			}
 			if(str_comp(aCmd, "setengineer") == 0)
 			{
 				m_apPlayers[ClientID]->TrySetClass(CLASS_ENGINEER);
-				UpdateVotes(ClientID);
+				ResetVotes();
 				return;
 			}
 
@@ -1015,7 +1015,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				if (str_comp(aCmd, aCustomWeapon[i].m_BuyCmd) == 0)
 				{
 					m_apPlayers[ClientID]->BuyWeapon(i);
-					UpdateVotes(ClientID);
+					ResetVotes();
 					return;
 				}
 			}
@@ -1909,70 +1909,44 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 void CGameContext::SetupVotes(int ClientID)
 {
-	//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "clearing votes");
-	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
-	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, ClientID);
+	ResetVotes();
+}
 
+enum VoteTypes
+{
+	VOTE_ALL,
+	VOTE_CLASS,
+	VOTE_WEAPON
+};
+
+
+void CGameContext::ResetVotes()
+{
+	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
+	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
+	
 	m_pVoteOptionHeap->Reset();
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
 	
-	InitVotes(-2);
-}
-
-
-
-void CGameContext::InitVotes(int ClientID)
-{
 	if (m_Difficulty != NORMAL)
-		AddVote("Difficulty: Normal", "setdiffnormal", ClientID);
+		AddCustomVote("Difficulty: Normal", "setdiffnormal", VOTE_ALL);
 	if (m_Difficulty != HARD)
-		AddVote("Difficulty: Hard", "setdiffhard", ClientID);
+		AddCustomVote("Difficulty: Hard", "setdiffhard", VOTE_ALL);
 	if (m_Difficulty != SUICIDAL)
-		AddVote("Difficulty: Suicidal", "setdiffsuicidal", ClientID);
-
+		AddCustomVote("Difficulty: Suicidal", "setdiffsuicidal", VOTE_ALL);
 	
-	if (ClientID >= 0 && ClientID < FIRST_BOT_ID)
-	{
-		if (m_apPlayers[ClientID])
-		{
-			if (m_apPlayers[ClientID]->m_Class < 0)
-			{
-				AddVote("", "null", ClientID);
-				AddVote("Select class:", "null", ClientID);
-				AddVote("Commando", "setcommando", ClientID);
-				AddVote("Medic", "setmedic", ClientID);
-				AddVote("Berserker", "setberserker", ClientID);
-				AddVote("Pioneer", "setpioneer", ClientID);
-				AddVote("Engineer", "setengineer", ClientID);
-			}
-			
-			AddVote("", "null", ClientID);
-			AddVote("Buy & Upgrade:", "null", ClientID);
-			m_apPlayers[ClientID]->VoteBuyableWeapons();
-		}
-	}
-	/*
-	else
-	{
-		AddVote("", "null", ClientID);
-		AddVote("Select class: Commando", "setcommando", ClientID);
-		AddVote("Select class: Medic", "setmedic", ClientID);
-		AddVote("Select class: Berserker", "setberserker", ClientID);
-		AddVote("Select class: Pioneer", "setpioneer", ClientID);
-		AddVote("Select class: Engineer", "setengineer", ClientID);
-	}
-	*/
+	AddCustomVote("", "null", VOTE_CLASS);
+	AddCustomVote("Select class:", "null", VOTE_CLASS);
+	AddCustomVote("Commando", "setcommando", VOTE_CLASS);
+	AddCustomVote("Medic", "setmedic", VOTE_CLASS);
+	AddCustomVote("Berserker", "setberserker", VOTE_CLASS);
+	AddCustomVote("Pioneer", "setpioneer", VOTE_CLASS);
+	AddCustomVote("Engineer", "setengineer", VOTE_CLASS);
 	
-	
-	AddVote("", "null", -2);
-	AddVote("Select class:", "null", -2);
-	AddVote("Commando", "setcommando", -2);
-	AddVote("Medic", "setmedic", -2);
-	AddVote("Berserker", "setberserker", -2);
-	AddVote("Pioneer", "setpioneer", -2);
-	AddVote("Engineer", "setengineer", -2);
+	AddCustomVote("", "null", VOTE_ALL);
+	AddCustomVote("Buy & Upgrade:", "null", VOTE_ALL);
 	
 	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 	{
@@ -1981,38 +1955,96 @@ void CGameContext::InitVotes(int ClientID)
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "%s - %d points", aCustomWeapon[i].m_Name, aCustomWeapon[i].m_Cost);
 
-			AddVote(aBuf, aCustomWeapon[i].m_BuyCmd, -2);
+			AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
 		}
 	}
 }
 
 
-void CGameContext::UpdateVotes(int ClientID)
+void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex)
 {
-	if (ClientID >= FIRST_BOT_ID)
+	if(m_NumVoteOptions == MAX_VOTE_OPTIONS)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "ERROR - MAX_VOTE_OPTIONS REACHED! (did you really reach 128?)");
 		return;
-	
-	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
-	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, ClientID);
+	}
+
+	// check for valid option"
+	if(str_length(Cmd) >= VOTE_CMD_LENGTH)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", Cmd);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+		return;
+	}
+	while(*Desc && *Desc == ' ')
+		Desc++;
+
+	CVoteOptionServer *pOption = m_pVoteOptionFirst;
+
+	// add the option
+	++this->m_NumVoteOptions;
+	int Len = str_length(Cmd);
+
+	pOption = (CVoteOptionServer *)this->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
+	pOption->m_pNext = 0;
+	pOption->m_pPrev = m_pVoteOptionLast;
+	if(pOption->m_pPrev)
+		pOption->m_pPrev->m_pNext = pOption;
+	m_pVoteOptionLast = pOption;
+	if(!m_pVoteOptionFirst)
+		m_pVoteOptionFirst = pOption;
+
+	str_copy(pOption->m_aDescription, Desc, sizeof(pOption->m_aDescription));
+	mem_copy(pOption->m_aCommand, Cmd, Len+1);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
+	//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
 
 	
-	m_pVoteOptionHeap->Reset();
-	m_pVoteOptionFirst = 0;
-	m_pVoteOptionLast = 0;
-	m_NumVoteOptions = 0;
+	// inform clients about added option
+	if (Type == VOTE_CLASS)
+	{
+		// send vote to players without class
+		for (int i = 0; i < FIRST_BOT_ID; i++)
+		{
+			if (m_apPlayers[i])
+			{
+				if (m_apPlayers[i]->m_Class < 0)
+				{
+					CNetMsg_Sv_VoteOptionAdd OptionMsg;
+					OptionMsg.m_pDescription = pOption->m_aDescription;
+					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+				}
+			}
+		}
+	}
 	
-
-	if (ClientID == -1)
+	if (Type == VOTE_WEAPON)
 	{
 		for (int i = 0; i < FIRST_BOT_ID; i++)
 		{
 			if (m_apPlayers[i])
-				InitVotes(i);
+			{
+				if (m_apPlayers[i]->BuyableWeapon(WeaponIndex))
+				{
+					CNetMsg_Sv_VoteOptionAdd OptionMsg;
+					OptionMsg.m_pDescription = pOption->m_aDescription;
+					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+				}
+			}
 		}
 	}
-	else
-		InitVotes(ClientID);
+	
+	if (Type == VOTE_ALL)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
+	}
 }
+
+
 
 
 void CGameContext::AddVote(const char * Desc, const char * Cmd, int ClientID)

@@ -31,16 +31,6 @@
 #include <game/server/ai/bossminion.h>
 
 
-
-static const char *aDifficulty[NUM_DIFFICULTIES] = 
-{
-	"Normal",
-	"Hard",
-	"Suicidal"
-};
-
-
-
 CGameControllerKillingFloor::CGameControllerKillingFloor(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
 	m_pGameType = "KF";
@@ -384,7 +374,7 @@ void CGameControllerKillingFloor::CreateDroppables()
 		m_PickupCount++;
 
 		// armors
-		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_ARMOR, 0);
+		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_ARMOR, 1);
 		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
 		m_apPickup[m_PickupCount]->m_Dropable = true;
 		m_PickupCount++;

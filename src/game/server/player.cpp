@@ -7,24 +7,6 @@
 
 #include <game/server/entities/staticlaser.h>
 
-
-
-
-static const char *TipText[NUM_TIPS] =
-{
-	"Check vote menu to buy & upgrade weapons", // TIP_BUY
-	"Armor shows your remaining clips, collect armor to get more ammo", // TIP_ARMOR
-	//"You can throw grenades using heart emoticon", // TIP_COMMANDO
-	"You can create clips by using any emoticon", // TIP_COMMANDO
-	"You can heal by using any emoticon", // TIP_MEDIC
-	"You can put electro mines by using any emoticon", // TIP_ENGINEER
-	"You can put land mines by using any emoticon", // TIP_PIONEER
-	"You can activate bloodlust by using any emoticon" // TIP_PIONEER
-};
-
-
-
-
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
@@ -383,7 +365,7 @@ void CPlayer::TryRespawn()
 	
 	m_Respawns++;
 	
-	GameServer()->UpdateVotes(GetCID());
+	GameServer()->ResetVotes();
 }
 
 
@@ -404,6 +386,22 @@ bool CPlayer::AIInputChanged()
 	return false;
 }
 
+
+
+bool CPlayer::BuyableWeapon(int i)
+{
+	DisableTip(TIP_BUY);
+
+	if (!GotWeapon(i) && aCustomWeapon[i].m_Cost > 0 && (GotWeapon(aCustomWeapon[i].m_Require) || aCustomWeapon[i].m_Require == -1))
+	{
+		if (aCustomWeapon[i].m_Require >= 0 && WeaponDisabled(aCustomWeapon[i].m_Require))
+			return false;
+
+		return true;
+	}
+	
+	return false;
+}
 
 
 
@@ -503,7 +501,7 @@ bool CPlayer::BuyWeapon(int CustomWeapon)
 		GameServer()->SendChatTarget(GetCID(), aBuf);
 	}
 	
-	GameServer()->UpdateVotes(GetCID());
+	GameServer()->ResetVotes();
 	return true;
 }
 
@@ -564,7 +562,7 @@ void CPlayer::TrySetClass(int WantedClass)
 	};
 	
 	GetCharacter()->GiveClassWeapon();
-	GameServer()->UpdateVotes(GetCID());
+	GameServer()->ResetVotes();
 }
 
 

@@ -11,8 +11,6 @@
 #define BERSERKER_ABILITY_COOLDOWN 800
 
 #define MAX_GRENADES 5
- 
-// testing
 
 enum PlayerClasses
 {
@@ -46,15 +44,25 @@ const int TipTimer[NUM_TIPS] =
 	4500, // TIP_BERSERKER
 };
 
-// moved TipTex to player.cpp
+static const char *TipText[NUM_TIPS] =
+{
+	"Check vote menu to buy & upgrade weapons", // TIP_BUY
+	"Armor shows your remaining clips, collect armor to get more ammo", // TIP_ARMOR
+	//"You can throw grenades using heart emoticon", // TIP_COMMANDO
+	"You can create clips by using any emoticon", // TIP_COMMANDO
+	"You can heal by using any emoticon", // TIP_MEDIC
+	"You can put electro mines by using any emoticon", // TIP_ENGINEER
+	"You can put land mines by using any emoticon", // TIP_PIONEER
+	"You can activate bloodlust by using any emoticon" // TIP_PIONEER
+};
 
 
 
 
 struct CWeapon
 {
-	char m_Name[64];
-	char m_BuyCmd[64];
+	char m_Name[32];
+	char m_BuyCmd[32];
 	int m_ParentWeapon;
 	int m_ProjectileType;
 	int m_Sound;
@@ -197,7 +205,6 @@ enum WeaponExtraFeature
 	BIGBULLETSPREAD,
 	SLEEPEFFECT,
 	ELECTRIC,
-	NUM_EXTRA_FEATURES
 };
 
 

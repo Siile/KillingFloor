@@ -123,6 +123,7 @@ public:
 	
 	
 	// custom
+	bool BuyableWeapon(int i);
 	void ListBuyableWeapons();
 	void VoteBuyableWeapons();
 	bool BuyWeapon(int CustomWeapon);
