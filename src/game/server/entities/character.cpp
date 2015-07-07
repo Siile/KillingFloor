@@ -186,6 +186,8 @@ void CCharacter::ActivateBloodlust()
 	
 bool CCharacter::SetLandmine()
 {
+	//int i = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y-32);
+	
 	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x-16, m_Pos.y+24)&CCollision::COLFLAG_SOLID && GameServer()->Collision()->GetCollisionAt(m_Pos.x+16, m_Pos.y+24)&CCollision::COLFLAG_SOLID)
 	{
 		new CLandmine(&GameServer()->m_World, m_Pos + vec2(0, 16), m_pPlayer->GetCID());
@@ -202,6 +204,8 @@ bool CCharacter::SetLandmine()
 
 bool CCharacter::SetElectromine()
 {
+	//int i = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y-32);
+	
 	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x-16, m_Pos.y+24)&CCollision::COLFLAG_SOLID && GameServer()->Collision()->GetCollisionAt(m_Pos.x+16, m_Pos.y+24)&CCollision::COLFLAG_SOLID)
 	{
 		new CElectromine(&GameServer()->m_World, m_Pos + vec2(0, 16), m_pPlayer->GetCID());
