@@ -747,7 +747,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0 || strcmp(pMsg->m_pMessage, "/cmdlist") == 0 )
 			{
 				//SendChatTarget(ClientID, pMsg->m_pMessage);
-				SendChatTarget(ClientID, "Killing Floor 1.0");
+				SendChatTarget(ClientID, "Killing Floor 1.1");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to select a class and to do shopping");
 				SendChatTarget(ClientID, "For updates and more info, check www.ninslash.com");

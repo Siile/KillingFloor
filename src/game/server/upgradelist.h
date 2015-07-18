@@ -8,11 +8,34 @@
 #define COMMANDO_ABILITY_COOLDOWN 600
 #define ENGINEER_ABILITY_COOLDOWN 400
 #define PIONEER_ABILITY_COOLDOWN 400
-#define BERSERKER_ABILITY_COOLDOWN 800
+#define BERSERKER_ABILITY_COOLDOWN 600
 
 #define MAX_GRENADES 5
  
-// testing
+
+ 
+ /*
+ 
+ TODO
+
+ segfaults
+ DM mode
+ 
+ */
+
+ 
+ /*
+ 1.1
+ 
+ weapon balances
+ ninja (test)
+ doom ray (test)
+ 
+ */
+ 
+ 
+ 
+ 
 
 enum PlayerClasses
 {
@@ -135,6 +158,7 @@ enum CustomWeapons
 	RIFLE_HEAVYRIFLE,
 	RIFLE_LASERRIFLE,
 	RIFLE_LIGHTNINGRIFLE,
+	RIFLE_DOOMRAY,
 	RIFLE_BOTLIGHTNING,
 	RIFLE_BOTLASER,
 	GRENADE_GRENADELAUNCHER,
@@ -166,6 +190,7 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	120, // RIFLE_HEAVYRIFLE,
 	120, // RIFLE_LASERRIFLE,
 	120, // RIFLE_LIGHTNINGRIFLE,
+	120, // RIFLE_DOOMRAY,
 	600, // RIFLE_BOTLIGHTNING,
 	800, // RIFLE_BOTLASER,
 	120, // GRENADE_GRENADELAUNCHER,
@@ -239,7 +264,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0, // powerup size
 		0, // max ammo
 		0.75f, // bullet life - vanilla ninja life * bulletlife
-		620, // bullet reload time
+		600, // bullet reload time
 		0, // clip reload time
 		0.0f // knockback
 		),
@@ -358,8 +383,8 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0, // clip size
 		0, // powerup size
 		0, // max ammo
-		1.3f, // bullet life
-		800, // bullet reload time
+		1.1f, // bullet life
+		600, // bullet reload time
 		0, // clip reload time
 		1.0f // knockback
 		),
@@ -374,7 +399,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		1, // damage
 		0, // extra1
 		true, // autofire
-		4, // bullet spread
+		3, // bullet spread
 		2, // clip size
 		0, // powerup size
 		0, // max ammo
@@ -416,7 +441,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		5, // bullet spread
 		10, // clip size
-		10, // powerup size
+		20, // powerup size
 		100, // max ammo
 		0.185f, // bullet life
 		215, // bullet reload time
@@ -471,7 +496,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GUN_FIRE,
 		-1, // require
 		0, // cost
-		2, // damage
+		1, // damage
 		0, // extra1
 		true, // autofire
 		1, // bullet spread
@@ -479,7 +504,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		14, // powerup size
 		70, // max ammo
 		0.3f, // bullet life
-		150, // bullet reload time
+		160, // bullet reload time
 		650, // clip reload time
 		10.0f // bullet knockback
 		),
@@ -498,7 +523,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		6, // clip size
 		12, // powerup size
 		60, // max ammo
-		0.3f, // bullet life
+		0.4f, // bullet life
 		160, // bullet reload time
 		700, // clip reload time
 		15.0f // bullet knockback
@@ -512,10 +537,10 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		-1, // require
 		0, // cost
 		2, // damage
-		0, // extra1
+		SLEEPEFFECT, // extra1
 		false, // autofire
 		1, // bullet spread
-		10, // clip size
+		5, // clip size
 		10, // powerup size
 		50, // max ammo
 		0, // bullet life
@@ -530,16 +555,16 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_BULLET,
 		SOUND_GUN_FIRE,
 		-1, // require
-		80, // cost
-		1, // damage
+		100, // cost
+		2, // damage
 		BULLETSPREAD, // extra1
 		true, // autofire
 		1, // bullet spread
 		30, // clip size
-		30, // powerup size
+		60, // powerup size
 		210, // max ammo
 		0.6f, // bullet life
-		110, // bullet reload time
+		120, // bullet reload time
 		1200, // clip reload time
 		12.0f // bullet knockback
 		),
@@ -550,16 +575,16 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_BULLET,
 		SOUND_GUN_FIRE,
 		RIFLE_ASSAULTRIFLE, // require
-		80, // cost
-		2, // damage
+		100, // cost
+		3, // damage
 		BULLETSPREAD, // extra1
 		true, // autofire
 		1, // bullet spread
 		30, // clip size
-		30, // powerup size
+		60, // powerup size
 		210, // max ammo
 		0.6f, // bullet life
-		110, // bullet reload time
+		120, // bullet reload time
 		1200, // clip reload time
 		17.0f // bullet knockback
 		),
@@ -576,7 +601,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		1, // bullet spread
 		30, // clip size
-		30, // powerup size
+		60, // powerup size
 		210, // max ammo
 		0, // bullet life
 		125, // bullet reload time
@@ -596,10 +621,30 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		1, // bullet spread
 		30, // clip size
-		30, // powerup size
+		60, // powerup size
 		210, // max ammo
 		0, // bullet life
 		125, // bullet reload time
+		1200, // clip reload time
+		0.0f // bullet knockback
+		),
+	CWeapon(
+		"Doom ray",
+		"/upg doomray",
+		WEAPON_RIFLE,
+		PROJTYPE_LASER,
+		SOUND_RIFLE_FIRE,
+		RIFLE_LASERRIFLE, // require
+		150, // cost
+		1, // damage
+		DOOMROCKETS, // extra1
+		false, // autofire
+		1, // bullet spread
+		4, // clip size
+		4, // powerup size
+		20, // max ammo
+		0, // bullet life
+		400, // bullet reload time
 		1200, // clip reload time
 		0.0f // bullet knockback
 		),

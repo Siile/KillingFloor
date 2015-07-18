@@ -3,12 +3,13 @@
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include "laser.h"
+#include "superexplosion.h"
 
-CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int Damage, int Sleep)
+CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int Damage, int ExtraInfo)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER)
 {
 	m_Damage = Damage;
-	m_Sleep = Sleep;
+	m_ExtraInfo = ExtraInfo;
 	m_Pos = Pos;
 	m_Owner = Owner;
 	m_Energy = StartEnergy;
@@ -43,6 +44,13 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	}
 	else
 		pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
+	
+	if (m_ExtraInfo == DOOMROCKETS)
+	{
+		CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_Pos, m_Owner, WEAPON_RIFLE, 2);
+		GameServer()->m_World.InsertEntity(S);
+	}
+	
 	return true;
 }
 
@@ -52,6 +60,12 @@ void CLaser::DoBounce()
 
 	if(m_Energy < 0)
 	{
+		if (m_ExtraInfo == DOOMROCKETS)
+		{
+			CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_Pos, m_Owner, WEAPON_RIFLE, 2);
+			GameServer()->m_World.InsertEntity(S);
+		}
+		
 		GameServer()->m_World.DestroyEntity(this);
 		return;
 	}

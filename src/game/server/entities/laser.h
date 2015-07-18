@@ -8,7 +8,7 @@
 class CLaser : public CEntity
 {
 public:
-	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int Damage, int Sleep = 0);
+	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int Damage, int ExtraInfo = -1);
 
 	virtual void Reset();
 	virtual void Tick();
@@ -26,7 +26,7 @@ private:
 	int m_Bounces;
 	int m_EvalTick;
 	int m_Owner;
-	int m_Sleep;
+	int m_ExtraInfo;
 	int m_Damage;
 };
 

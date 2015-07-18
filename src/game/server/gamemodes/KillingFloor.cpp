@@ -15,6 +15,7 @@
 
 #include <game/server/ai.h>
 #include <game/server/ai/runner.h>
+#include <game/server/ai/ninja.h>
 #include <game/server/ai/pistolbot.h>
 #include <game/server/ai/bomber.h>
 #include <game/server/ai/tank.h>
@@ -506,9 +507,11 @@ CAI *CGameControllerKillingFloor::GetNextEnemyAI(class CCharacter *pChr)
 		break;
 	
 	case 4:
-			
+		if (m_RoundZombieCount < 12)
+			AI = new CAINinja(GameServer(), pChr->GetPlayer());
+		
 		if (m_RoundZombieCount%4 == 1)
-			AI = new CAIPistolbot(GameServer(), pChr->GetPlayer());
+			AI = new CAIFlybot(GameServer(), pChr->GetPlayer());
 		else if (m_RoundZombieCount%4 == 2)
 			AI = new CAIShotgunner(GameServer(), pChr->GetPlayer());
 		else if (m_RoundZombieCount%4 == 3)
@@ -536,17 +539,18 @@ CAI *CGameControllerKillingFloor::GetNextEnemyAI(class CCharacter *pChr)
 			AI = new CAIElectro(GameServer(), pChr->GetPlayer());
 		
 		else if (m_RoundZombieCount%5 == 1)
-			AI = new CAIShotgunner(GameServer(), pChr->GetPlayer());
+			AI = new CAILightningbot(GameServer(), pChr->GetPlayer());
 		else if (m_RoundZombieCount%5 == 2)
 			AI = new CAILaserbot(GameServer(), pChr->GetPlayer());
 		else if (m_RoundZombieCount%5 == 3)
 			AI = new CAIGrabber(GameServer(), pChr->GetPlayer());
 		else if (m_RoundZombieCount%5 == 4)
-			AI = new CAIFlybot(GameServer(), pChr->GetPlayer());
+			AI = new CAINinja(GameServer(), pChr->GetPlayer());
 		else
-			AI = new CAISpiderbomber(GameServer(), pChr->GetPlayer());
+			AI = new CAIMadbomber(GameServer(), pChr->GetPlayer());
 		break;
 	
+	// skipped
 	case 7:
 		if (m_RoundZombieCount%4 == 1)
 			AI = new CAILightningbot(GameServer(), pChr->GetPlayer());

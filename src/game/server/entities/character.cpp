@@ -899,9 +899,8 @@ void CCharacter::FireWeapon()
 			
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BIGBULLETSPREAD)
 				a += frandom()*0.14f - frandom()*0.14f;
-		
-			int Zzz = 0; //int(GetPlayer()->HasWeaponUpgrade(WEAPON_RIFLE, UPG_SLEEPEFFECT))*70;
-			new CLaser(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Zzz);
+			
+			new CLaser(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
 		} break;
 		
 		case PROJTYPE_LIGHTNING:

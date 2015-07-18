@@ -74,5 +74,5 @@ void CLandmine::Snap(int SnappingClient)
 	pP->m_X = (int)m_Pos.x;
 	pP->m_Y = (int)m_Pos.y;
 	pP->m_Type = POWERUP_ARMOR;
-	pP->m_Subtype = 0;
+	pP->m_Subtype = 2;
 }

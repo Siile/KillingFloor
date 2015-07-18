@@ -46,7 +46,7 @@ void CAIBosshead::DoBehavior()
 		
 		// stop body too
 		if (Player()->GetCharacter()->m_Bottom->GetPlayer()->m_pAI)
-			Player()->GetCharacter()->m_Bottom->GetPlayer()->m_pAI->StandStill(100);
+			Player()->GetCharacter()->m_Bottom->GetPlayer()->m_pAI->StandStill(60);
 		
 		StandStill(100);
 		

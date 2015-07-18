@@ -78,10 +78,13 @@ void CProjectile::Tick()
 		{
 			if (m_ExtraInfo == MEGAROCKETS)
 			{
-				GameServer()->CreateExplosion(CurPos+vec2(-32, -32), m_Owner, m_Weapon, false);
+				/*GameServer()->CreateExplosion(CurPos+vec2(-32, -32), m_Owner, m_Weapon, false);
 				GameServer()->CreateExplosion(CurPos+vec2(+32, -32), m_Owner, m_Weapon, false);
 				GameServer()->CreateExplosion(CurPos+vec2(+32, +32), m_Owner, m_Weapon, false);
-				GameServer()->CreateExplosion(CurPos+vec2(-32, +32), m_Owner, m_Weapon, false);
+				GameServer()->CreateExplosion(CurPos+vec2(-32, +32), m_Owner, m_Weapon, false);*/
+				
+				CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, CurPos, m_Owner, m_Weapon, 1);
+				GameServer()->m_World.InsertEntity(S);
 			}
 			else if (m_ExtraInfo == DOOMROCKETS)
 			{
