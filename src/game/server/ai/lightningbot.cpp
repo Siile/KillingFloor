@@ -17,7 +17,7 @@ void CAILightningbot::OnCharacterSpawn(CCharacter *pChr)
 	pChr->SetCustomWeapon(RIFLE_BOTLIGHTNING);
 	pChr->SetHealth(6+GameServer()->Difficulty()*2);
 	
-	str_copy(pChr->GetPlayer()->m_TeeInfos.m_SkinName, "bluekitty", 64);
+	str_copy(pChr->GetPlayer()->m_TeeInfos.m_SkinName, "twintri", 64);
 	
 	m_Reward = 15;
 }
