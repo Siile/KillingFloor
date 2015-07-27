@@ -1904,6 +1904,14 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//game.world.insert_entity(game.Controller);
 
 	//SetupVotes(-1);
+	
+	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
+	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
+	
+	m_pVoteOptionHeap->Reset();
+	m_pVoteOptionFirst = 0;
+	m_pVoteOptionLast = 0;
+	m_NumVoteOptions = 0;
 }
 
 /*
