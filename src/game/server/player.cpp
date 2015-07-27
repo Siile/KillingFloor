@@ -6,7 +6,7 @@
 #include "player.h"
 
 #include <game/server/entities/staticlaser.h>
-
+#include <game/server/upgradelist.h>
 
 
 
@@ -420,7 +420,7 @@ bool CPlayer::BuyableWeapon(int i)
 	return false;
 }
 
-
+/*
 void CPlayer::VoteBuyableWeapons()
 {
 	DisableTip(TIP_BUY);
@@ -440,7 +440,7 @@ void CPlayer::VoteBuyableWeapons()
 		}
 	}
 }
-
+*/
 
 void CPlayer::ListBuyableWeapons()
 {

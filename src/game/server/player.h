@@ -125,7 +125,7 @@ public:
 	// custom
 	bool BuyableWeapon(int i);
 	void ListBuyableWeapons();
-	void VoteBuyableWeapons();
+	//void VoteBuyableWeapons();
 	bool BuyWeapon(int CustomWeapon);
 
 	bool GotWeapon(int CustomWeapon)
