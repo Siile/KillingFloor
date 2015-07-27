@@ -202,7 +202,7 @@ public:
 	void CreateZombies();
 	
 	// custom vote stuff
-	void SetupVotes(int ClientID = -1);
+	//void SetupVotes(int ClientID = -1);
 	void ResetVotes();
 	void AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex = -1);
 	void AddVote(const char * Desc, const char * Cmd, int ClientID = -1);

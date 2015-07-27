@@ -1903,14 +1903,15 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	//game.world.insert_entity(game.Controller);
 
-	SetupVotes(-1);
+	//SetupVotes(-1);
 }
 
-
+/*
 void CGameContext::SetupVotes(int ClientID)
 {
 	ResetVotes();
 }
+*/
 
 enum VoteTypes
 {
@@ -1922,6 +1923,7 @@ enum VoteTypes
 
 void CGameContext::ResetVotes()
 {
+	/*
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
 	
@@ -1958,6 +1960,7 @@ void CGameContext::ResetVotes()
 			AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
 		}
 	}
+	*/
 }
 
 
@@ -2005,6 +2008,9 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 	// inform clients about added option
 	if (Type == VOTE_CLASS)
 	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+					
 		// send vote to players without class
 		for (int i = 0; i < FIRST_BOT_ID; i++)
 		{
@@ -2012,8 +2018,6 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 			{
 				if (m_apPlayers[i]->m_Class < 0)
 				{
-					CNetMsg_Sv_VoteOptionAdd OptionMsg;
-					OptionMsg.m_pDescription = pOption->m_aDescription;
 					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 				}
 			}
@@ -2022,14 +2026,15 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 	
 	if (Type == VOTE_WEAPON)
 	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		
 		for (int i = 0; i < FIRST_BOT_ID; i++)
 		{
 			if (m_apPlayers[i])
 			{
 				if (m_apPlayers[i]->BuyableWeapon(WeaponIndex))
 				{
-					CNetMsg_Sv_VoteOptionAdd OptionMsg;
-					OptionMsg.m_pDescription = pOption->m_aDescription;
 					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 				}
 			}
