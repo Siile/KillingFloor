@@ -24,6 +24,9 @@ enum Difficulty
 	NUM_DIFFICULTIES
 };
 
+
+
+
 /*
 	Tick
 		Game Context (CGameContext::tick)
@@ -77,6 +80,8 @@ class CGameContext : public IGameServer
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
+	bool m_HacksEnabled;
+	
 	bool m_Resetting;
 public:
 	IServer *Server() const { return m_pServer; }
@@ -99,6 +104,9 @@ public:
 	class CCharacter *GetPlayerChar(int ClientID);
 
 	int m_LockTeams;
+	
+	int m_Difficulty;
+	int Difficulty(){ return m_Difficulty; }
 
 	// voting
 	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
@@ -107,11 +115,6 @@ public:
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
 	void AbortVoteKickOnDisconnect(int ClientID);
 
-	
-	int m_Difficulty;
-	int Difficulty(){ return m_Difficulty; }
-	
-	
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
@@ -163,11 +166,10 @@ public:
 
 	//
 	void SwapTeams();
-	
+
 	//
 	void UpdateAI();
 	
-
 	// engine events
 	virtual void OnInit();
 	virtual void OnConsoleInit();
@@ -183,13 +185,7 @@ public:
 	virtual void AddZombie(int ClientID);
 	virtual bool AIInputUpdateNeeded(int ClientID);
 	virtual void AIUpdateInput(int ClientID, int *Data);
-	
-	void CreateZombies();
-	
-	void ResetVotes();
-	void AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex = -1);
-	void AddVote(const char * Desc, const char * Cmd, int ClientID = -1);
-	
+
 	virtual void OnClientConnected(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID, const char *pReason);
@@ -202,6 +198,14 @@ public:
 	virtual const char *GameType();
 	virtual const char *Version();
 	virtual const char *NetVersion();
+	
+	void CreateZombies();
+	
+	// custom vote stuff
+	//void SetupVotes(int ClientID = -1);
+	void ResetVotes();
+	void AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex = -1);
+	void AddVote(const char * Desc, const char * Cmd, int ClientID = -1);
 };
 
 inline int CmaskAll() { return -1; }

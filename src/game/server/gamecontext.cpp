@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+
+#include <cstring>
 #include <new>
 #include <base/math.h>
 #include <engine/shared/config.h>
@@ -8,11 +10,15 @@
 #include "gamecontext.h"
 #include <game/version.h>
 #include <game/collision.h>
-#include <game/gamecore.h>
+#include <game/gamecore.h> 
 #include "gamemodes/dm.h"
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
+#include "gamemodes/KillingFloor.h"
 #include "gamemodes/mod.h"
+
+#include <game/server/ai_protocol.h>
+#include <game/server/ai.h>
 
 enum
 {
@@ -34,6 +40,8 @@ void CGameContext::Construct(int Resetting)
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
 	m_LockTeams = 0;
+	
+	m_Difficulty = 0;
 
 	if(Resetting==NO_RESET)
 		m_pVoteOptionHeap = new CHeap();
@@ -141,7 +149,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 			if(l)
 				ForceDir = normalize(Diff);
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
-			float Dmg = 6 * l;
+			float Dmg = 4 * l;
 			if((int)Dmg)
 				apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 		}
@@ -219,6 +227,8 @@ void CGameContext::CreateSoundGlobal(int Sound, int Target)
 
 void CGameContext::SendChatTarget(int To, const char *pText)
 {
+	if (To >= FIRST_BOT_ID)
+		return;
 	CNetMsg_Sv_Chat Msg;
 	Msg.m_Team = 0;
 	Msg.m_ClientID = -1;
@@ -230,7 +240,7 @@ void CGameContext::SendChatTarget(int To, const char *pText)
 void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 {
 	char aBuf[256];
-	if(ChatterClientID >= 0 && ChatterClientID < MAX_CLIENTS)
+	if(ChatterClientID >= 0 && ChatterClientID < FIRST_BOT_ID)
 		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientID, Team, Server()->ClientName(ChatterClientID), pText);
 	else
 		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
@@ -244,7 +254,7 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 		Msg.m_pMessage = pText;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 	}
-	else 
+	else
 	{
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 1;
@@ -255,7 +265,7 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NOSEND, -1);
 
 		// send to the clients
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		for(int i = 0; i < FIRST_BOT_ID; i++)
 		{
 			if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == Team)
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
@@ -292,7 +302,7 @@ void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char
 	// check if a vote is already running
 	if(m_VoteCloseTime)
 		return;
-
+	
 	// reset votes
 	m_VoteEnforce = VOTE_ENFORCE_UNKNOWN;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -440,12 +450,12 @@ void CGameContext::OnTick()
 			if(m_VoteUpdate)
 			{
 				// count votes
-				char aaBuf[MAX_CLIENTS][NETADDR_MAXSTRSIZE] = {{0}};
-				for(int i = 0; i < MAX_CLIENTS; i++)
+				char aaBuf[FIRST_BOT_ID][NETADDR_MAXSTRSIZE] = {{0}};
+				for(int i = 0; i < FIRST_BOT_ID; i++)
 					if(m_apPlayers[i])
 						Server()->GetClientAddr(i, aaBuf[i], NETADDR_MAXSTRSIZE);
-				bool aVoteChecked[MAX_CLIENTS] = {0};
-				for(int i = 0; i < MAX_CLIENTS; i++)
+				bool aVoteChecked[FIRST_BOT_ID] = {0};
+				for(int i = 0; i < FIRST_BOT_ID; i++)
 				{
 					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || aVoteChecked[i])	// don't count in votes by spectators
 						continue;
@@ -454,7 +464,7 @@ void CGameContext::OnTick()
 					int ActVotePos = m_apPlayers[i]->m_VotePos;
 
 					// check for more players with the same ip (only use the vote of the one who voted first)
-					for(int j = i+1; j < MAX_CLIENTS; ++j)
+					for(int j = i+1; j < FIRST_BOT_ID; ++j)
 					{
 						if(!m_apPlayers[j] || aVoteChecked[j] || str_comp(aaBuf[j], aaBuf[i]))
 							continue;
@@ -482,6 +492,28 @@ void CGameContext::OnTick()
 
 			if(m_VoteEnforce == VOTE_ENFORCE_YES)
 			{
+				if ( strcmp(m_aVoteCommand, "setdiffnormal") == 0 )
+				{
+					m_Difficulty = NORMAL;
+					SendBroadcast("Difficulty: Normal", -1);
+					ResetVotes();
+				}
+				else
+				if ( strcmp(m_aVoteCommand, "setdiffhard") == 0 )
+				{
+					m_Difficulty = HARD;
+					SendBroadcast("Difficulty: Hard", -1);
+					ResetVotes();
+				}
+				else
+				if ( strcmp(m_aVoteCommand, "setdiffsuicidal") == 0 )
+				{
+					m_Difficulty = SUICIDAL;
+					SendBroadcast("Difficulty: Suicidal", -1);
+					ResetVotes();
+				}
+				
+				
 				Server()->SetRconCID(IServer::RCON_CID_VOTE);
 				Console()->ExecuteLine(m_aVoteCommand);
 				Server()->SetRconCID(IServer::RCON_CID_SERV);
@@ -518,7 +550,63 @@ void CGameContext::OnTick()
 #endif
 }
 
+
+
+bool CGameContext::AIInputUpdateNeeded(int ClientID)
+{
+	if(m_apPlayers[ClientID])
+		return m_apPlayers[ClientID]->AIInputChanged();
+		
+	return false;
+}
+
+
+void CGameContext::UpdateAI()
+{
+	for(int i = FIRST_BOT_ID; i < LAST_BOT_ID; i++)
+	{
+		if(m_apPlayers[i])
+			m_apPlayers[i]->AITick();
+	}
+}
+
+
+/*
+enum InputList
+{
+	INPUT_MOVE = 0,
+	INPUT_SHOOT = 4,
+	INPUT_JUMP = 3,
+	INPUT_HOOK = 5
+	
+	//1 & 2 vectors for weapon direction
+};
+*/
+
+
+void CGameContext::AIUpdateInput(int ClientID, int *Data)
+{
+	if(m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
+		m_apPlayers[ClientID]->m_pAI->UpdateInput(Data);
+		
+	/*
+	// test remove
+	if (m_apPlayers[ClientID])
+	{
+		Data[0] = 1;
+	}
+	*/
+}
+
+
+
 // Server hooks
+void CGameContext::AddZombie(int ClientID)
+{
+	Server()->AddZombie(ClientID);
+}
+
+
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
 	if(!m_World.m_Paused)
@@ -536,7 +624,7 @@ void CGameContext::OnClientEnter(int ClientID)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientID]->Respawn();
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientID), m_pController->GetTeamName(m_apPlayers[ClientID]->GetTeam()));
+	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the floor", Server()->ClientName(ClientID));
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientID, Server()->ClientName(ClientID), m_apPlayers[ClientID]->GetTeam());
@@ -548,8 +636,9 @@ void CGameContext::OnClientEnter(int ClientID)
 void CGameContext::OnClientConnected(int ClientID)
 {
 	// Check which team the player should be on
-	const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientID);
-
+	//const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientID);
+	const int StartTeam = ClientID < FIRST_BOT_ID ? TEAM_RED : TEAM_BLUE;
+	
 	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, StartTeam);
 	//players[client_id].init(client_id);
 	//players[client_id].client_id = client_id;
@@ -650,9 +739,95 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(Length == 0 || (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed()*((15+Length)/16) > Server()->Tick()))
 				return;
 
+			bool SendToTeam = true;
+			
 			pPlayer->m_LastChat = Server()->Tick();
 
-			SendChat(ClientID, Team, pMsg->m_pMessage);
+			// /help /weapon /smth
+			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0 || strcmp(pMsg->m_pMessage, "/cmdlist") == 0 )
+			{
+				//SendChatTarget(ClientID, pMsg->m_pMessage);
+				SendChatTarget(ClientID, "Killing Floor 1.1");
+				SendChatTarget(ClientID, "");
+				SendChatTarget(ClientID, "Use voting system to select a class and to do shopping");
+				SendChatTarget(ClientID, "For updates and more info, check www.ninslash.com");
+				//SendToTeam = false;
+			}
+			else
+			if ( strcmp(pMsg->m_pMessage, "/buy") == 0 || strcmp(pMsg->m_pMessage, "/shop") == 0 || strcmp(pMsg->m_pMessage, "/upg") == 0)
+			{
+				pPlayer->ListBuyableWeapons();
+				//SendToTeam = false;
+			}
+			
+			if ( strcmp(pMsg->m_pMessage, "enablehacks") == 0)
+			{
+				m_HacksEnabled = true;
+				SendToTeam = false;
+			}
+			
+			if ( strcmp(pMsg->m_pMessage, "disablehacks") == 0)
+			{
+				m_HacksEnabled = false;
+				SendToTeam = false;
+			}
+			
+			if (m_HacksEnabled)
+			{
+				if ( strcmp(pMsg->m_pMessage, "greedisgood") == 0)
+				{
+					pPlayer->GreedIsGood();
+					SendToTeam = false;
+				}
+				else
+				if ( strcmp(pMsg->m_pMessage, "iddqd") == 0)
+				{
+					pPlayer->IDDQD();
+					SendToTeam = false;
+				}
+			}
+			
+			for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
+			{
+				if ( strcmp(pMsg->m_pMessage, aCustomWeapon[i].m_BuyCmd) == 0)
+				{
+					pPlayer->BuyWeapon(i);
+					//SendToTeam = false;
+					break;
+				}
+			}
+			
+			// class selection
+			if (strcmp(pMsg->m_pMessage, "commando") == 0 || strcmp(pMsg->m_pMessage, "/commando") == 0 ||
+				strcmp(pMsg->m_pMessage, "comando") == 0 || strcmp(pMsg->m_pMessage, "/comando") == 0)
+				pPlayer->TrySetClass(CLASS_COMMANDO);
+				
+			if (strcmp(pMsg->m_pMessage, "medic") == 0 || strcmp(pMsg->m_pMessage, "/medic") == 0)
+				pPlayer->TrySetClass(CLASS_MEDIC);
+			
+			if (strcmp(pMsg->m_pMessage, "pioneer") == 0 || strcmp(pMsg->m_pMessage, "/pioneer") == 0 ||
+				strcmp(pMsg->m_pMessage, "pioner") == 0 || strcmp(pMsg->m_pMessage, "/pioner") == 0)
+				pPlayer->TrySetClass(CLASS_PIONEER);
+				
+			if (strcmp(pMsg->m_pMessage, "engineer") == 0 || strcmp(pMsg->m_pMessage, "/engineer") == 0 ||
+				strcmp(pMsg->m_pMessage, "enginer") == 0 || strcmp(pMsg->m_pMessage, "/enginer") == 0)
+				pPlayer->TrySetClass(CLASS_ENGINEER);
+			
+			if (strcmp(pMsg->m_pMessage, "berserk") == 0 || strcmp(pMsg->m_pMessage, "/berserk") == 0 ||
+				strcmp(pMsg->m_pMessage, "berserker") == 0 || strcmp(pMsg->m_pMessage, "/berserker") == 0)
+				pPlayer->TrySetClass(CLASS_BERSERKER);
+			
+
+			
+			
+			
+			if (SendToTeam)
+				SendChat(ClientID, Team, pMsg->m_pMessage);
+			else
+				SendChatTarget(ClientID, pMsg->m_pMessage);
+			
+			
+			
 		}
 		else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 		{
@@ -691,6 +866,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(str_comp_nocase(pMsg->m_Type, "option") == 0)
 			{
 				CVoteOptionServer *pOption = m_pVoteOptionFirst;
+				
 				while(pOption)
 				{
 					if(str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
@@ -707,8 +883,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 				if(!pOption)
 				{
+					//str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
+					//str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
+						
 					str_format(aChatmsg, sizeof(aChatmsg), "'%s' isn't an option on this server", pMsg->m_Value);
 					SendChatTarget(ClientID, aChatmsg);
+					
 					return;
 				}
 			}
@@ -736,7 +916,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 
 				int KickID = str_toint(pMsg->m_Value);
-				if(KickID < 0 || KickID >= MAX_CLIENTS || !m_apPlayers[KickID])
+				if(KickID < 0 || KickID >= FIRST_BOT_ID || !m_apPlayers[KickID])
 				{
 					SendChatTarget(ClientID, "Invalid client id to kick");
 					return;
@@ -775,7 +955,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 
 				int SpectateID = str_toint(pMsg->m_Value);
-				if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+				if(SpectateID < 0 || SpectateID >= FIRST_BOT_ID || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
 				{
 					SendChatTarget(ClientID, "Invalid client id to move");
 					return;
@@ -790,7 +970,57 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				str_format(aDesc, sizeof(aDesc), "move '%s' to spectators", Server()->ClientName(SpectateID));
 				str_format(aCmd, sizeof(aCmd), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
 			}
+			
+			// do nothing
+			if(str_comp(aCmd, "null") == 0)
+			{
+				return;
+			}
+			
+			// class pick
+			if(str_comp(aCmd, "setmedic") == 0)
+			{
+				m_apPlayers[ClientID]->TrySetClass(CLASS_MEDIC);
+				ResetVotes();
+				return;
+			}
+			if(str_comp(aCmd, "setcommando") == 0)
+			{
+				m_apPlayers[ClientID]->TrySetClass(CLASS_COMMANDO);
+				ResetVotes();
+				return;
+			}
+			if(str_comp(aCmd, "setberserker") == 0)
+			{
+				m_apPlayers[ClientID]->TrySetClass(CLASS_BERSERKER);
+				ResetVotes();
+				return;
+			}
+			if(str_comp(aCmd, "setpioneer") == 0)
+			{
+				m_apPlayers[ClientID]->TrySetClass(CLASS_PIONEER);
+				ResetVotes();
+				return;
+			}
+			if(str_comp(aCmd, "setengineer") == 0)
+			{
+				m_apPlayers[ClientID]->TrySetClass(CLASS_ENGINEER);
+				ResetVotes();
+				return;
+			}
 
+			// buying & upgrading
+			for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
+			{
+				if (str_comp(aCmd, aCustomWeapon[i].m_BuyCmd) == 0)
+				{
+					m_apPlayers[ClientID]->BuyWeapon(i);
+					ResetVotes();
+					return;
+				}
+			}
+			
+			
 			if(aCmd[0])
 			{
 				SendChat(-1, CGameContext::CHAT_ALL, aChatmsg);
@@ -853,8 +1083,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					(void)m_pController->CheckTeamBalance();
 					pPlayer->m_TeamChangeTick = Server()->Tick();
 				}
-				else
-					SendBroadcast("Teams must be balanced, please join other team", ClientID);
+				//else
+				//	SendBroadcast("Teams must be balanced, please join other team", ClientID);
 			}
 			else
 			{
@@ -911,16 +1141,152 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 
 			pPlayer->m_LastEmote = Server()->Tick();
+			
+			// medic class ability check
+			if (pPlayer->m_Class == CLASS_MEDIC) // && pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter())
+				{
+					if (pPlayer->GetCharacter()->m_ClassAbilityTimer <= 0)
+					{
+						m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos + vec2(-40, 0), POWERUP_HEALTH);
+						m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos + vec2(+40, 0), POWERUP_HEALTH);
+						m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos + vec2(0, -40), POWERUP_HEALTH);
+						pPlayer->GetCharacter()->m_ClassAbilityTimer = MEDIC_ABILITY_COOLDOWN;
+					}
+					else
+					{
+						SendChatTarget(ClientID, "Heal not loaded yet");
+					}
+					
+					pPlayer->DisableTip(TIP_MEDIC);
+				}
+			}
+			
+			
+			// commando class ability check
+			if (pPlayer->m_Class == CLASS_COMMANDO) // && pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter())
+				{
+					if (pPlayer->GetCharacter()->m_ClassAbilityTimer <= 0)
+					{
+						m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos + vec2(-40, 0), POWERUP_ARMOR);
+						m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos + vec2(+40, 0), POWERUP_ARMOR);
+						m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos + vec2(0, -40), POWERUP_ARMOR);
+						pPlayer->GetCharacter()->m_ClassAbilityTimer = COMMANDO_ABILITY_COOLDOWN;
+					}
+					else
+					{
+						SendChatTarget(ClientID, "Create clips not loaded yet");
+					}
+					
+					pPlayer->DisableTip(TIP_COMMANDO);
+				}
+			}
+			
+			
+			// engineer class ability check
+			if (pPlayer->m_Class == CLASS_ENGINEER) // && pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter())
+				{
+					if (pPlayer->GetCharacter()->m_ClassAbilityTimer <= 0)
+					{
+						if (pPlayer->GetCharacter()->SetElectromine())
+						{
+							pPlayer->GetCharacter()->m_ClassAbilityTimer = ENGINEER_ABILITY_COOLDOWN;
+						}
+					}
+					else
+					{
+						SendChatTarget(ClientID, "Electro mine not loaded yet");
+					}
+					
+					pPlayer->DisableTip(TIP_ENGINEER);
+				}
+			}
+			
+			// pioneer class ability check
+			if (pPlayer->m_Class == CLASS_PIONEER) // && pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter())
+				{
+					if (pPlayer->GetCharacter()->m_ClassAbilityTimer <= 0)
+					{
+						if (pPlayer->GetCharacter()->SetLandmine())
+						{
+							pPlayer->GetCharacter()->m_ClassAbilityTimer = PIONEER_ABILITY_COOLDOWN;
+						}
+					}
+					else
+					{
+						SendChatTarget(ClientID, "Land mine not loaded yet");
+					}
+					
+					pPlayer->DisableTip(TIP_PIONEER);
+				}
+			}
+			
+			
+			
+			// pioneer class ability check
+			if (pPlayer->m_Class == CLASS_BERSERKER) // && pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter())
+				{
+					if (pPlayer->GetCharacter()->m_ClassAbilityTimer <= 0)
+					{
+						pPlayer->GetCharacter()->ActivateBloodlust();
+						pPlayer->GetCharacter()->m_ClassAbilityTimer = BERSERKER_ABILITY_COOLDOWN;
+					}
+					else
+					{
+						SendChatTarget(ClientID, "Bloodlust not loaded yet");
+					}
+					
+					pPlayer->DisableTip(TIP_BERSERKER);
+				}
+			}
+			
+			
+			
+			
+			// throwing grenades
+			// if (pMsg->m_Emoticon == EMOTICON_DEVILTEE)
+				/*
+			if (pPlayer->m_Class == CLASS_COMMANDO && pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter())
+				{
+					if (pPlayer->GetCharacter()->m_Grenades > 0)
+					{
+						pPlayer->GetCharacter()->ThrowGrenade();
+					}
+					else
+					{
+						SendChatTarget(ClientID, "No grenades left");
+					}
+					
+					pPlayer->DisableTip(TIP_COMMANDO);
+				}
+			}
+			*/
+			
 
 			SendEmoticon(ClientID, pMsg->m_Emoticon);
 		}
 		else if (MsgID == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 		{
-			if(pPlayer->m_LastKill && pPlayer->m_LastKill+Server()->TickSpeed()*3 > Server()->Tick())
+			if(pPlayer->m_LastKill && pPlayer->m_LastKill+Server()->TickSpeed()*1 > Server()->Tick())
 				return;
 
-			pPlayer->m_LastKill = Server()->Tick();
-			pPlayer->KillCharacter(WEAPON_SELF);
+			//pPlayer->m_LastKill = Server()->Tick();
+			//pPlayer->KillCharacter(WEAPON_SELF);
+			
+			// reload instead of self kill
+			if (pPlayer->GetCharacter())
+				pPlayer->GetCharacter()->DoReloading(true);
 		}
 	}
 	else
@@ -1437,7 +1803,7 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 		CNetMsg_Sv_Motd Msg;
 		Msg.m_pMessage = g_Config.m_SvMotd;
 		CGameContext *pSelf = (CGameContext *)pUserData;
-		for(int i = 0; i < MAX_CLIENTS; ++i)
+		for(int i = 0; i < FIRST_BOT_ID; ++i)
 			if(pSelf->m_apPlayers[i])
 				pSelf->Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 	}
@@ -1499,6 +1865,8 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		m_pController = new CGameControllerCTF(this);
 	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
 		m_pController = new CGameControllerTDM(this);
+	else if(str_comp(g_Config.m_SvGametype, "KillingFloor") == 0)
+		m_pController = new CGameControllerKillingFloor(this);
 	else
 		m_pController = new CGameControllerDM(this);
 
@@ -1535,16 +1903,235 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	//game.world.insert_entity(game.Controller);
 
-#ifdef CONF_DEBUG
-	if(g_Config.m_DbgDummies)
+	//SetupVotes(-1);
+	
+	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
+	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
+	
+	m_pVoteOptionHeap->Reset();
+	m_pVoteOptionFirst = 0;
+	m_pVoteOptionLast = 0;
+	m_NumVoteOptions = 0;
+}
+
+/*
+void CGameContext::SetupVotes(int ClientID)
+{
+	ResetVotes();
+}
+*/
+
+enum VoteTypes
+{
+	VOTE_ALL,
+	VOTE_CLASS,
+	VOTE_WEAPON
+};
+
+
+void CGameContext::ResetVotes()
+{
+	/*
+	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
+	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
+	
+	m_pVoteOptionHeap->Reset();
+	m_pVoteOptionFirst = 0;
+	m_pVoteOptionLast = 0;
+	m_NumVoteOptions = 0;
+	
+	if (m_Difficulty != NORMAL)
+		AddCustomVote("Difficulty: Normal", "setdiffnormal", VOTE_ALL);
+	if (m_Difficulty != HARD)
+		AddCustomVote("Difficulty: Hard", "setdiffhard", VOTE_ALL);
+	if (m_Difficulty != SUICIDAL)
+		AddCustomVote("Difficulty: Suicidal", "setdiffsuicidal", VOTE_ALL);
+	
+	AddCustomVote("", "null", VOTE_CLASS);
+	AddCustomVote("Select class:", "null", VOTE_CLASS);
+	AddCustomVote("Commando", "setcommando", VOTE_CLASS);
+	AddCustomVote("Medic", "setmedic", VOTE_CLASS);
+	AddCustomVote("Berserker", "setberserker", VOTE_CLASS);
+	AddCustomVote("Pioneer", "setpioneer", VOTE_CLASS);
+	AddCustomVote("Engineer", "setengineer", VOTE_CLASS);
+	
+	AddCustomVote("", "null", VOTE_ALL);
+	AddCustomVote("Buy & Upgrade:", "null", VOTE_ALL);
+	
+	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 	{
-		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
+		if (aCustomWeapon[i].m_Cost > 0)
 		{
-			OnClientConnected(MAX_CLIENTS-i-1);
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "%s - %d points", aCustomWeapon[i].m_Name, aCustomWeapon[i].m_Cost);
+
+			AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
 		}
 	}
-#endif
+	*/
 }
+
+
+void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex)
+{
+	if(m_NumVoteOptions == MAX_VOTE_OPTIONS)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "ERROR - MAX_VOTE_OPTIONS REACHED! (did you really reach 128?)");
+		return;
+	}
+
+	// check for valid option"
+	if(str_length(Cmd) >= VOTE_CMD_LENGTH)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", Cmd);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+		return;
+	}
+	while(*Desc && *Desc == ' ')
+		Desc++;
+
+	CVoteOptionServer *pOption = m_pVoteOptionFirst;
+
+	// add the option
+	++this->m_NumVoteOptions;
+	int Len = str_length(Cmd);
+
+	pOption = (CVoteOptionServer *)this->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
+	pOption->m_pNext = 0;
+	pOption->m_pPrev = m_pVoteOptionLast;
+	if(pOption->m_pPrev)
+		pOption->m_pPrev->m_pNext = pOption;
+	m_pVoteOptionLast = pOption;
+	if(!m_pVoteOptionFirst)
+		m_pVoteOptionFirst = pOption;
+
+	str_copy(pOption->m_aDescription, Desc, sizeof(pOption->m_aDescription));
+	mem_copy(pOption->m_aCommand, Cmd, Len+1);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
+	//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+
+	
+	// inform clients about added option
+	if (Type == VOTE_CLASS)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+					
+		// send vote to players without class
+		for (int i = 0; i < FIRST_BOT_ID; i++)
+		{
+			if (m_apPlayers[i])
+			{
+				if (m_apPlayers[i]->m_Class < 0)
+				{
+					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+				}
+			}
+		}
+	}
+	
+	if (Type == VOTE_WEAPON)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		
+		for (int i = 0; i < FIRST_BOT_ID; i++)
+		{
+			if (m_apPlayers[i])
+			{
+				if (m_apPlayers[i]->BuyableWeapon(WeaponIndex))
+				{
+					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+				}
+			}
+		}
+	}
+	
+	if (Type == VOTE_ALL)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
+	}
+}
+
+
+
+
+void CGameContext::AddVote(const char * Desc, const char * Cmd, int ClientID)
+{
+	if(m_NumVoteOptions == MAX_VOTE_OPTIONS)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "ERROR - MAX_VOTE_OPTIONS REACHED! (did you really reach 128?)");
+		return;
+	}
+
+	// check for valid option"
+	if(/*!pSelf->Console()->LineIsValid(pCommand) ||  */str_length(Cmd) >= VOTE_CMD_LENGTH)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", Cmd);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+		return;
+	}
+	while(*Desc && *Desc == ' ')
+		Desc++;
+	/*if(str_length(Desc) >= VOTE_DESC_LENGTH || *Desc == 0)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", Desc);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+		return;
+	}*/
+
+	//Shall we keep this? -kiChris // no need - Kompl.exe
+	// check for duplicate entry
+	CVoteOptionServer *pOption = m_pVoteOptionFirst;
+	/*while(pOption)
+	{
+		if(str_comp_nocase(Desc, pOption->m_aDescription) == 0)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "option '%s' already exists", Desc);
+			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+			return;
+		}
+		pOption = pOption->m_pNext;
+	}*/
+
+	// add the option
+	++this->m_NumVoteOptions;
+	int Len = str_length(Cmd);
+
+	pOption = (CVoteOptionServer *)this->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
+	pOption->m_pNext = 0;
+	pOption->m_pPrev = m_pVoteOptionLast;
+	if(pOption->m_pPrev)
+		pOption->m_pPrev->m_pNext = pOption;
+	m_pVoteOptionLast = pOption;
+	if(!m_pVoteOptionFirst)
+		m_pVoteOptionFirst = pOption;
+
+	str_copy(pOption->m_aDescription, Desc, sizeof(pOption->m_aDescription));
+	mem_copy(pOption->m_aCommand, Cmd, Len+1);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
+	//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+
+	if(ClientID == -2)
+		return;
+	// inform clients about added option
+	CNetMsg_Sv_VoteOptionAdd OptionMsg;
+	OptionMsg.m_pDescription = pOption->m_aDescription;
+	Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
+}
+
+
+
+
+
 
 void CGameContext::OnShutdown()
 {
@@ -1597,72 +2184,6 @@ const char *CGameContext::Version() { return GAME_VERSION; }
 const char *CGameContext::NetVersion() { return GAME_NETVERSION; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }
-
-
-
-
-bool CGameContext::AIInputUpdateNeeded(int ClientID)
-{
-	if(m_apPlayers[ClientID])
-		return m_apPlayers[ClientID]->AIInputChanged();
-		
-	return false;
-}
-
-
-void CGameContext::UpdateAI()
-{
-	for(int i = FIRST_BOT_ID; i < LAST_BOT_ID; i++)
-	{
-		if(m_apPlayers[i])
-			m_apPlayers[i]->AITick();
-	}
-}
-
-
-/*
-enum InputList
-{
-	INPUT_MOVE = 0,
-	INPUT_SHOOT = 4,
-	INPUT_JUMP = 3,
-	INPUT_HOOK = 5
-	
-	//1 & 2 vectors for weapon direction
-};
-*/
-
-
-void CGameContext::AIUpdateInput(int ClientID, int *Data)
-{
-	if(m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
-		m_apPlayers[ClientID]->m_pAI->UpdateInput(Data);
-		
-	/*
-	// test remove
-	if (m_apPlayers[ClientID])
-	{
-		Data[0] = 1;
-	}
-	*/
-}
-
-
-void CGameContext::ResetVotes()
-{
-}
-
-void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex)
-{
-}
-
-
-
-// Server hooks
-void CGameContext::AddZombie(int ClientID)
-{
-	Server()->AddZombie(ClientID);
-}
 
 
 
