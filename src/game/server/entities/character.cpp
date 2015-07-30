@@ -78,6 +78,8 @@ void CCharacter::Reset()
 
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {			
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character spawn start");
+	
 	m_Grenades = 2;
 	m_ClassAbilityTimer = 0;
 
@@ -125,6 +127,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	}
 	else
 		GiveClassWeapon();
+	
+	
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character spawn end");
 	
 	return true;
 }
@@ -1325,6 +1330,7 @@ void CCharacter::TopTick()
 
 void CCharacter::Tick()
 {
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character tick");
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
