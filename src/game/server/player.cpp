@@ -80,6 +80,7 @@ void CPlayer::Tick()
 	Server()->SetClientScore(m_ClientID, m_Score);
 
 	// tip helpers
+	/*
 	for (int i = 0; i < NUM_TIPS; i++)
 		m_TipTimer[i]--;
 	
@@ -109,6 +110,7 @@ void CPlayer::Tick()
 	
 	if (m_TipTimer[TIP_COMMANDO] <= 0 && m_Class == CLASS_COMMANDO && GetCharacter())
 		ShowTip(TIP_COMMANDO);
+	*/
 	
 	
 	
@@ -589,6 +591,7 @@ void CPlayer::DisableTip(int Tip)
 
 void CPlayer::ShowTip(int Tip)
 {
+	/*
 	if (Tip < 0 || Tip >= NUM_TIPS)
 		return;
 	
@@ -600,6 +603,7 @@ void CPlayer::ShowTip(int Tip)
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "Tip: %s", TipText[Tip]);
 	GameServer()->SendChatTarget(GetCID(), aBuf);
+	*/
 }
 
 
