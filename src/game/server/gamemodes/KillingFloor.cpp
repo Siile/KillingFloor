@@ -571,9 +571,11 @@ CAI *CGameControllerKillingFloor::GetNextEnemyAI(class CCharacter *pChr)
 }
 
 
-void CGameControllerKillingFloor::OnCharacterSpawn(class CCharacter *pChr)
+void CGameControllerKillingFloor::OnCharacterSpawn(CCharacter *pChr)
 {
 	IGameController::OnCharacterSpawn(pChr);
+	
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "remove", "CGameControllerKillingFloor::OnCharacterSpawn");
 	
 	// init AI
 	if (pChr->GetPlayer()->GetCID() >= FIRST_BOT_ID)

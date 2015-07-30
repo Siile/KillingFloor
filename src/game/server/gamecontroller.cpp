@@ -404,6 +404,7 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 
 void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 {
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "remove", "IGameController::OnCharacterSpawn");
 	// default health
 	pChr->SetHealth(30);
 
