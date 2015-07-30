@@ -1905,6 +1905,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	//SetupVotes(-1);
 	
+	/*
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
 	
@@ -1912,6 +1913,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
+	*/
 }
 
 /*
@@ -1931,7 +1933,6 @@ enum VoteTypes
 
 void CGameContext::ResetVotes()
 {
-	/*
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
 	
@@ -1968,7 +1969,6 @@ void CGameContext::ResetVotes()
 			AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
 		}
 	}
-	*/
 }
 
 
