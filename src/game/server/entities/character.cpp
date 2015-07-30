@@ -127,7 +127,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	else
 		GiveClassWeapon();
 	
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character spawn end");
 	return true;
 }
 
@@ -1160,10 +1159,8 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 			};
 		}
 		
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "ScanWeapons");
 		ScanWeapons();
 		
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "DoWeaponSwitch");
 		if (m_ActiveCustomWeapon == aCustomWeapon[CustomWeapon].m_Require)
 		{
 			m_QueuedCustomWeapon = CustomWeapon;

@@ -906,8 +906,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				m_aClients[ClientID].m_State = CClient::STATE_INGAME;
 				GameServer()->OnClientEnter(ClientID);
-				
-				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", "NETMSG_ENTERGAME finished");
 			}
 		}
 		else if(Msg == NETMSG_INPUT)
@@ -1792,9 +1790,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 
 void CServer::AddZombie(int ClientID)
-{
-	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", "AddZombie started");
-	
+{	
 	m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 	GameServer()->OnClientConnected(ClientID);
 	//GameServer()->OnClientEnter(i);

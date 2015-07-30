@@ -345,7 +345,6 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 
 	if(Team == TEAM_SPECTATORS)
 	{
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "Spectator join, segfault incoming");
 		// update spectator modes
 		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{
