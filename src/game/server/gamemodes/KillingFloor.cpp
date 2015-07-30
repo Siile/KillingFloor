@@ -32,13 +32,14 @@
 #include <game/server/ai/bossminion.h>
 
 
-
+/*
 static const char *aDifficulty[NUM_DIFFICULTIES] = 
 {
 	"Normal",
 	"Hard",
 	"Suicidal"
 };
+*/
 
 
 
@@ -930,12 +931,14 @@ void CGameControllerKillingFloor::StartRound()
 	// boss round
 	if (m_Round == m_MaxRounds)
 	{
-		str_format(aBuf, sizeof(aBuf), "Boss wave - Difficulty: %s", aDifficulty[GameServer()->Difficulty()]);
+		//str_format(aBuf, sizeof(aBuf), "Boss wave - Difficulty: %s", aDifficulty[GameServer()->Difficulty()]);
+		str_format(aBuf, sizeof(aBuf), "Boss wave");
 		m_ZombiesLeft = 1;
 	}
 	else
 	{
-		str_format(aBuf, sizeof(aBuf), "Wave %d / %d - Difficulty: %s", m_Round, m_MaxRounds, aDifficulty[GameServer()->Difficulty()]);
+		//str_format(aBuf, sizeof(aBuf), "Wave %d / %d - Difficulty: %s", m_Round, m_MaxRounds, aDifficulty[GameServer()->Difficulty()]);
+		str_format(aBuf, sizeof(aBuf), "Wave %d / %d", m_Round, m_MaxRounds);
 	}
 		
 	if (m_Round == 2)
