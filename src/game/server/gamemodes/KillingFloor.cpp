@@ -746,12 +746,22 @@ int CGameControllerKillingFloor::CountPlayers()
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 		if(!pPlayer)
 			continue;
-
-		NumPlayers++;
+		else
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "player id %d exist", i);
+			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", aBuf);
+			NumPlayers++;
+		}
 	}
 	
 	if (NumPlayers > 0)
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "NumPlayers > 0");
+	{
+		//char aBuf[256];
+		//str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
+		//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+		//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "NumPlayers > 0");
+	}
 	
 	return NumPlayers;
 }
