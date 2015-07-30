@@ -575,8 +575,6 @@ void CGameControllerKillingFloor::OnCharacterSpawn(class CCharacter *pChr)
 {
 	IGameController::OnCharacterSpawn(pChr);
 	
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "OnCharacterSpawn started");
-	
 	// init AI
 	if (pChr->GetPlayer()->GetCID() >= FIRST_BOT_ID)
 	{
@@ -747,14 +745,7 @@ int CGameControllerKillingFloor::CountPlayers()
 		if(!pPlayer)
 			continue;
 
-	}
-	
-	if (NumPlayers > 0)
-	{
-		//char aBuf[256];
-		//str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
-		//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
-		//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "NumPlayers > 0");
+		NumPlayers++;
 	}
 	
 	return NumPlayers;
@@ -780,9 +771,6 @@ int CGameControllerKillingFloor::CountPlayersAlive()
 		
 		NumPlayersAlive++;
 	}
-	
-	if (NumPlayersAlive > 0)
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "NumPlayersAlive > 0");
 		
 	return NumPlayersAlive;
 }
@@ -921,9 +909,7 @@ void CGameControllerKillingFloor::WaveCleanup()
 }
 
 void CGameControllerKillingFloor::StartRound()
-{
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "StartRound");
-	
+{	
 	ClearPickups();
 
 	m_GameState = GAMESTATE_ROUND;
@@ -1041,10 +1027,6 @@ void CGameControllerKillingFloor::Tick()
 
 	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
 		return;	
-	
-	
-	return;
-	
 	
 	ResetLaserwalls();
 	

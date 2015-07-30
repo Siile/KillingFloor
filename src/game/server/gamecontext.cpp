@@ -1933,6 +1933,8 @@ enum VoteTypes
 
 void CGameContext::ResetVotes()
 {
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Resetting votes, segfault incoming...");
+	
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
 	
@@ -1974,6 +1976,8 @@ void CGameContext::ResetVotes()
 
 void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex)
 {
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Adding custom vote, segfault incoming...");
+	
 	if(m_NumVoteOptions == MAX_VOTE_OPTIONS)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "ERROR - MAX_VOTE_OPTIONS REACHED! (did you really reach 128?)");
@@ -2189,6 +2193,8 @@ IGameServer *CreateGameServer() { return new CGameContext; }
 
 void CGameContext::CreateZombies()
 {
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "engine", "Creating zombies...");
+	
 	for (int i = FIRST_BOT_ID; i < LAST_BOT_ID; i++)
 		AddZombie(i);
 }
