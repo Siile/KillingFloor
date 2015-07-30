@@ -575,6 +575,8 @@ void CGameControllerKillingFloor::OnCharacterSpawn(class CCharacter *pChr)
 {
 	IGameController::OnCharacterSpawn(pChr);
 	
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "OnCharacterSpawn started");
+	
 	// init AI
 	if (pChr->GetPlayer()->GetCID() >= FIRST_BOT_ID)
 	{
@@ -748,6 +750,9 @@ int CGameControllerKillingFloor::CountPlayers()
 		NumPlayers++;
 	}
 	
+	if (NumPlayers > 0)
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "NumPlayers > 0");
+	
 	return NumPlayers;
 }
 
@@ -910,6 +915,8 @@ void CGameControllerKillingFloor::WaveCleanup()
 
 void CGameControllerKillingFloor::StartRound()
 {
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "StartRound");
+	
 	ClearPickups();
 
 	m_GameState = GAMESTATE_ROUND;
