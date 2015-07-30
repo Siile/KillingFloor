@@ -612,7 +612,7 @@ int CCharacter::GetNextWeapon(int ParentType)
 
 int CCharacter::GetFirstWeapon(int ParentType)
 {
-	for (int i = 0; i < NUM_CUSTOMWEAPONS+1; i++)
+	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 	{
 		if (aCustomWeapon[i].m_ParentWeapon == ParentType && m_aWeapon[i].m_Got && !m_aWeapon[i].m_Disabled)
 		{
@@ -1117,9 +1117,7 @@ void CCharacter::GiveClassWeapon()
 bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 {
 	if(!m_aWeapon[CustomWeapon].m_Got)
-	{
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "GiveCustomWeapon start");
-	
+	{	
 		m_aWeapon[CustomWeapon].m_Got = true;
 		m_aWeapon[CustomWeapon].m_Disabled = false;
 		m_aWeapon[CustomWeapon].m_Ready = false;
@@ -1127,7 +1125,6 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 		
 		bool SkipAmmoFill = false;
 		
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "weapon requirements");
 		if (aCustomWeapon[CustomWeapon].m_Require >= 0)
 		{
 			m_aWeapon[aCustomWeapon[CustomWeapon].m_Require].m_Disabled = true;
@@ -1145,7 +1142,6 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 			}
 		}
 		
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "ammo fill");
 		if (!SkipAmmoFill)
 		{
 			switch (GameServer()->Difficulty())
