@@ -77,9 +77,7 @@ void CCharacter::Reset()
 }
 
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
-{			
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character spawn start");
-	
+{
 	m_Grenades = 2;
 	m_ClassAbilityTimer = 0;
 
@@ -103,30 +101,42 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
+	
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "m_Core.Reset");
 	m_Core.Reset();
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
+	
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "m_Core.m_apCharacters");
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "mem_zero");
 	m_ReckoningTick = 0;
 	mem_zero(&m_SendCore, sizeof(m_SendCore));
 	mem_zero(&m_ReckoningCore, sizeof(m_ReckoningCore));
 
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "m_World.InsertEntity");
 	GameServer()->m_World.InsertEntity(this);
 	m_Alive = true;
 
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "OnCharacterSpawn");
 	GameServer()->m_pController->OnCharacterSpawn(this);
 	
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "GiveCustomWeapon");
 	GiveCustomWeapon(HAMMER_BASIC);
 	SetCustomWeapon(HAMMER_BASIC);
 	
 	if (pPlayer->m_pAI)
 	{
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "m_pAI");
 		pPlayer->m_pAI->OnCharacterSpawn(this);
 		m_IsBot = true;
 	}
 	else
+	{
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chr", "GiveClassWeapon");
 		GiveClassWeapon();
+	}
 	
 	
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character spawn end");
@@ -1330,7 +1340,6 @@ void CCharacter::TopTick()
 
 void CCharacter::Tick()
 {
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "votes", "Character tick");
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
