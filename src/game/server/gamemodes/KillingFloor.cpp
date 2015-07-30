@@ -746,13 +746,7 @@ int CGameControllerKillingFloor::CountPlayers()
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 		if(!pPlayer)
 			continue;
-		else
-		{
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "player id %d exist", i);
-			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", aBuf);
-			NumPlayers++;
-		}
+
 	}
 	
 	if (NumPlayers > 0)
@@ -787,6 +781,9 @@ int CGameControllerKillingFloor::CountPlayersAlive()
 		NumPlayersAlive++;
 	}
 	
+	if (NumPlayersAlive > 0)
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "kf", "NumPlayersAlive > 0");
+		
 	return NumPlayersAlive;
 }
 
@@ -1044,6 +1041,10 @@ void CGameControllerKillingFloor::Tick()
 
 	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
 		return;	
+	
+	
+	return;
+	
 	
 	ResetLaserwalls();
 	
